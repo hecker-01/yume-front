@@ -1,4 +1,5 @@
-const API_BASE_URL = "http://localhost:3000/api/v1";
+const BASE_URL = "http://localhost:3000/";
+const API_BASE_URL = BASE_URL + "api/v1";
 
 class ApiService {
   constructor() {
@@ -271,4 +272,5 @@ const apiService = new ApiService();
 // Load tokens on initialization
 apiService.loadTokens();
 
+export { BASE_URL };
 export default apiService;

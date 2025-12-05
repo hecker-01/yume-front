@@ -35,11 +35,11 @@ router.isReady().then(() => {
 
 .page-enter-from {
   opacity: 0;
-  transform: translateX(20px);
+  /* transform: translateX(20px); */
 }
 
 .page-leave-to {
   opacity: 0;
-  transform: translateX(-20px);
+  /* transform: translateX(-20px); */
 }
 </style>
