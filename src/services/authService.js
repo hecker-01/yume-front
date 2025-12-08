@@ -81,12 +81,47 @@ class AuthService {
   }
 
   /**
-   * Check if user is authenticated
-   * With HTTP-Only cookies, authentication is verified by the server
-   * @returns {boolean} - True if authenticated
+   * Check if user is authenticated (client-side only).
+   * This only checks local state and may be out of sync with the server.
+   * For critical actions, use verifyAuthentication() to check with the server.
+   * @returns {boolean} - True if authenticated (client-side state)
    */
   isAuthenticated() {
     return this.isLoggedIn && this.currentUser !== null;
+  }
+
+  /**
+   * Verify authentication status with the server.
+   * Makes a request to the server to confirm session validity.
+   * @returns {Promise<boolean>} - True if authenticated (server-side)
+   */
+  async verifyAuthentication() {
+    try {
+      // Replace with the actual endpoint your API provides for session/user status
+      const response = await apiService.getCurrentUser?.();
+      if (response && response.user) {
+        // Optionally update local state
+        this.currentUser = {
+          id: response.user.id,
+          email: response.user.email,
+          name: response.user.name,
+          role: response.user.role,
+        };
+        this.isLoggedIn = true;
+        localStorage.setItem("currentUser", JSON.stringify(this.currentUser));
+        return true;
+      } else {
+        this.isLoggedIn = false;
+        this.currentUser = null;
+        localStorage.removeItem("currentUser");
+        return false;
+      }
+    } catch (error) {
+      this.isLoggedIn = false;
+      this.currentUser = null;
+      localStorage.removeItem("currentUser");
+      return false;
+    }
   }
 
   /**
