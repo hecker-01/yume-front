@@ -141,7 +141,7 @@ class AuthService {
       return await apiService.refreshAccessToken();
     } catch (error) {
       console.error("Token refresh failed:", error);
-      this.logout();
+      await this.logout();
       throw error;
     }
   }
