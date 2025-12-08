@@ -16,9 +16,9 @@ class ApiService {
       headers["Content-Type"] = "application/json";
     }
 
-    if (includeAuth && this.accessToken) {
-      headers["Authorization"] = `Bearer ${this.accessToken}`;
-    }
+    // With HTTP-Only cookies, the browser automatically includes credentials
+    // No need to manually add Authorization header
+    // This parameter is kept for backward compatibility but not used
 
     return headers;
   }
@@ -43,32 +43,34 @@ class ApiService {
   }
 
   // Set tokens (call this after login)
+  // Tokens are now stored in HTTP-Only cookies set by the server
   setTokens(accessToken, refreshToken) {
-    this.accessToken = accessToken;
-    this.refreshToken = refreshToken;
-
-    // Store in localStorage for persistence
-    if (accessToken) localStorage.setItem("accessToken", accessToken);
-    if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
+    // Note: HTTP-Only cookies are set by the server in the Set-Cookie header
+    // The client does not need to store them explicitly
+    // This method kept for compatibility but tokens come from cookies
   }
 
   // Clear tokens (call this after logout)
   clearTokens() {
+    // HTTP-Only cookies are managed by the server
+    // Client cannot directly delete them, but server will invalidate on logout
     this.accessToken = null;
     this.refreshToken = null;
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
   }
 
-  // Load tokens from localStorage
+  // Load tokens from localStorage (not used with HTTP-Only cookies)
   loadTokens() {
-    this.accessToken = localStorage.getItem("accessToken");
-    this.refreshToken = localStorage.getItem("refreshToken");
+    // With HTTP-Only cookies, tokens are automatically sent by the browser
+    // This method is kept for backward compatibility
   }
 
   // Check if user is authenticated
+  // With HTTP-Only cookies, we rely on server validation
+  // Client tracks authentication state through authService
   isAuthenticated() {
-    return !!this.accessToken;
+    // This is maintained for backward compatibility
+    // Actual authentication check is done by authService
+    return true; // Cookie presence is verified by server
   }
 
   // ========== AUTH ENDPOINTS ==========
@@ -77,21 +79,20 @@ class ApiService {
    * Login a user
    * @param {string} email - User email
    * @param {string} password - User password
-   * @returns {Promise<Object>} - Login response with tokens and user data
+   * @returns {Promise<Object>} - Login response with user data
    */
   async login(email, password) {
     const response = await fetch(`${this.baseURL}/auth/login`, {
       method: "POST",
       headers: this.getHeaders(),
       body: JSON.stringify({ email, password }),
+      credentials: "include", // Include cookies in request
     });
 
     const data = await this.handleResponse(response);
 
-    // Store tokens
-    if (data.accessToken && data.refreshToken) {
-      this.setTokens(data.accessToken, data.refreshToken);
-    }
+    // Note: Tokens are stored in HTTP-Only cookies by the server
+    // No client-side token storage needed
 
     return data;
   }
@@ -101,24 +102,15 @@ class ApiService {
    * @returns {Promise<Object>} - New access token
    */
   async refreshAccessToken() {
-    if (!this.refreshToken) {
-      throw new Error("No refresh token available");
-    }
-
     const response = await fetch(`${this.baseURL}/auth/refresh`, {
       method: "POST",
       headers: this.getHeaders(),
-      body: JSON.stringify({ token: this.refreshToken }),
+      credentials: "include", // Include refresh token cookie
     });
 
     const data = await this.handleResponse(response);
 
-    // Update access token
-    if (data.accessToken) {
-      this.accessToken = data.accessToken;
-      localStorage.setItem("accessToken", data.accessToken);
-    }
-
+    // Token is stored in HTTP-Only cookie by the server
     return data;
   }
 
@@ -127,21 +119,22 @@ class ApiService {
    * @returns {Promise<Object>} - Logout response
    */
   async logout() {
-    if (!this.refreshToken) {
+    try {
+      const response = await fetch(`${this.baseURL}/auth/logout`, {
+        method: "POST",
+        headers: this.getHeaders(),
+        credentials: "include", // Include cookies
+      });
+
+      const data = await this.handleResponse(response);
       this.clearTokens();
-      return { message: "Already logged out" };
+
+      return data;
+    } catch (error) {
+      // Clear local state even if logout API fails
+      this.clearTokens();
+      throw error;
     }
-
-    const response = await fetch(`${this.baseURL}/auth/logout`, {
-      method: "POST",
-      headers: this.getHeaders(),
-      body: JSON.stringify({ token: this.refreshToken }),
-    });
-
-    const data = await this.handleResponse(response);
-    this.clearTokens();
-
-    return data;
   }
 
   // ========== DISHES ENDPOINTS ==========
@@ -185,6 +178,7 @@ class ApiService {
       method: "POST",
       headers: this.getHeaders(true),
       body: JSON.stringify({ items }),
+      credentials: "include",
     });
 
     return await this.handleResponse(response);
@@ -199,6 +193,7 @@ class ApiService {
     const response = await fetch(`${this.baseURL}/orders/${id}`, {
       method: "GET",
       headers: this.getHeaders(true),
+      credentials: "include",
     });
 
     return await this.handleResponse(response);
@@ -230,6 +225,7 @@ class ApiService {
     const response = await fetch(`${this.baseURL}/users/${id}`, {
       method: "GET",
       headers: this.getHeaders(true),
+      credentials: "include",
     });
 
     return await this.handleResponse(response);
@@ -246,6 +242,7 @@ class ApiService {
       method: "PUT",
       headers: this.getHeaders(true),
       body: JSON.stringify(userData),
+      credentials: "include",
     });
 
     return await this.handleResponse(response);
@@ -260,6 +257,7 @@ class ApiService {
     const response = await fetch(`${this.baseURL}/users/${id}`, {
       method: "DELETE",
       headers: this.getHeaders(true),
+      credentials: "include",
     });
 
     return await this.handleResponse(response);
