@@ -34,13 +34,17 @@ class AuthService {
     try {
       const response = await apiService.login(email, password);
 
+      if (!response.user) {
+        throw new Error("Login response missing user data.");
+      }
+
       // Store user data (excluding sensitive info)
       // Tokens are stored in HTTP-Only cookies by the server
       this.currentUser = {
-        id: response.user?.id,
-        email: response.user?.email,
-        name: response.user?.name,
-        role: response.user?.role,
+        id: response.user.id,
+        email: response.user.email,
+        name: response.user.name,
+        role: response.user.role,
       };
 
       this.isLoggedIn = true;
