@@ -1,11 +1,55 @@
 <script setup>
 import { useRoute } from "vue-router";
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { getCartItemCount } from "@/services/cartService";
+import Cart from "@/components/Cart.vue";
 
 const route = useRoute();
+const showCart = ref(false);
+const cartItemCount = ref(0);
+
+const updateCartCount = () => {
+  cartItemCount.value = getCartItemCount();
+};
+
+const toggleCart = () => {
+  showCart.value = !showCart.value;
+};
+
+const closeCart = () => {
+  showCart.value = false;
+};
+
+const hasCartItems = computed(() => cartItemCount.value > 0);
+
+// Update cart count on mount
+onMounted(() => {
+  updateCartCount();
+  // Listen for storage events to update cart count when changed in other tabs/components
+  window.addEventListener("storage", updateCartCount);
+  // Custom event for same-tab updates
+  window.addEventListener("cartUpdated", updateCartCount);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("storage", updateCartCount);
+  window.removeEventListener("cartUpdated", updateCartCount);
+});
 </script>
 
 <template>
   <nav class="nav-container">
+    <!-- Floating Cart Icon -->
+    <button
+      v-if="hasCartItems"
+      class="floating-cart-btn"
+      @click="toggleCart"
+      aria-label="View cart"
+    >
+      <font-awesome-icon icon="shopping-cart" class="cart-icon" />
+      <span class="cart-badge">{{ cartItemCount }}</span>
+    </button>
+
     <ul class="nav-list">
       <!-- Orders -->
       <li>
@@ -43,6 +87,9 @@ const route = useRoute();
         </router-link>
       </li>
     </ul>
+
+    <!-- Cart Popup -->
+    <Cart v-if="showCart" @close="closeCart" @update="updateCartCount" />
   </nav>
 </template>
 
@@ -68,6 +115,73 @@ const route = useRoute();
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     border: 1px solid var(--border-subtle);
   }
+}
+
+/* Floating Cart Button */
+.floating-cart-btn {
+  position: absolute;
+  top: -1.5rem;
+  right: 1rem;
+  background-color: var(--torii);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 3.5rem;
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  z-index: 60;
+}
+
+@media (min-width: 768px) {
+  .floating-cart-btn {
+    top: -1.75rem;
+    right: 2rem;
+    width: 4rem;
+    height: 4rem;
+  }
+}
+
+.floating-cart-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.4);
+  background-color: #c83e3e;
+}
+
+.floating-cart-btn:active {
+  transform: translateY(-2px);
+}
+
+.cart-icon {
+  font-size: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .cart-icon {
+    font-size: 1.75rem;
+  }
+}
+
+.cart-badge {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  background-color: #fbbf24;
+  color: var(--charcoal);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.125rem 0.375rem;
+  border-radius: 9999px;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .nav-list {

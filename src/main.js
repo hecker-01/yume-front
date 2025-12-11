@@ -10,9 +10,14 @@ import {
   faHome,
   faClipboardList,
   faUserCircle,
+  faShoppingCart,
+  faTimes,
+  faTrash,
+  faPlus,
+  faMinus,
 } from "@fortawesome/free-solid-svg-icons";
 
-library.add(faHome, faClipboardList, faUserCircle);
+library.add(faHome, faClipboardList, faUserCircle, faShoppingCart, faTimes, faTrash, faPlus, faMinus);
 
 const app = createApp(App);
 app.component("font-awesome-icon", FontAwesomeIcon);

@@ -34,18 +34,32 @@ class AuthService {
     try {
       const response = await apiService.login(email, password);
 
-      if (!response.user) {
+      // Check if we got a userId from the login response
+      if (!response.userId && !response.user) {
         throw new Error("Login response missing user data.");
       }
 
-      // Store user data (excluding sensitive info)
-      // Tokens are stored in HTTP-Only cookies by the server
-      this.currentUser = {
-        id: response.user.id,
-        email: response.user.email,
-        name: response.user.name,
-        role: response.user.role,
-      };
+      // If we have userId but not full user object, fetch user details
+      let userId = response.userId || response.user?.id;
+      if (userId && !response.user) {
+        const userResponse = await apiService.getUserById(userId);
+        const userData = userResponse.user || userResponse;
+
+        this.currentUser = {
+          id: userData.id || userId,
+          email: userData.email || email,
+          name: userData.name || userData.username,
+          role: userData.role,
+        };
+      } else if (response.user) {
+        // Store user data (excluding sensitive info)
+        this.currentUser = {
+          id: response.user.id,
+          email: response.user.email,
+          name: response.user.name || response.user.username,
+          role: response.user.role,
+        };
+      }
 
       this.isLoggedIn = true;
       localStorage.setItem("currentUser", JSON.stringify(this.currentUser));
@@ -91,21 +105,69 @@ class AuthService {
   }
 
   /**
+   * Check if user is logged in with JWT token validation.
+   * Attempts to validate token, refresh if needed, or redirect to login.
+   * @returns {Promise<boolean>} - True if authenticated with valid token
+   */
+  async isLoggedInWithTokenCheck() {
+    // Check if we have user data
+    if (!this.isAuthenticated()) {
+      return false;
+    }
+
+    // Try to verify authentication with the server
+    try {
+      // Attempt to get current user (this will use the JWT token)
+      const isValid = await this.verifyAuthentication();
+      if (isValid) {
+        return true;
+      }
+    } catch (error) {
+      // Token might be expired, try to refresh
+      console.log("Token validation failed, attempting refresh...");
+      try {
+        await this.refreshToken();
+        // Try verification again after refresh
+        const isValid = await this.verifyAuthentication();
+        if (isValid) {
+          return true;
+        }
+      } catch (refreshError) {
+        console.error("Token refresh failed:", refreshError);
+      }
+    }
+
+    // All attempts failed, clear local state
+    this.currentUser = null;
+    this.isLoggedIn = false;
+    localStorage.removeItem("currentUser");
+    return false;
+  }
+
+  /**
    * Verify authentication status with the server.
    * Makes a request to the server to confirm session validity.
    * @returns {Promise<boolean>} - True if authenticated (server-side)
    */
   async verifyAuthentication() {
     try {
-      // Replace with the actual endpoint your API provides for session/user status
-      const response = await apiService.getCurrentUser?.();
-      if (response && response.user) {
-        // Optionally update local state
+      // Try to get current user info - this will validate the JWT token
+      // We'll use the getUserById endpoint with the current user's ID
+      if (!this.currentUser || !this.currentUser.id) {
+        return false;
+      }
+
+      const response = await apiService.getUserById(this.currentUser.id);
+      // Handle both response.user and direct user object
+      const userData = response.user || response;
+
+      if (userData && (userData.id || userData.UserID)) {
+        // Update local state with fresh data
         this.currentUser = {
-          id: response.user.id,
-          email: response.user.email,
-          name: response.user.name,
-          role: response.user.role,
+          id: userData.id || userData.UserID,
+          email: userData.email || userData.Email,
+          name: userData.name || userData.username || userData.Username,
+          role: userData.role || userData.Role,
         };
         this.isLoggedIn = true;
         localStorage.setItem("currentUser", JSON.stringify(this.currentUser));
@@ -117,10 +179,9 @@ class AuthService {
         return false;
       }
     } catch (error) {
-      this.isLoggedIn = false;
-      this.currentUser = null;
-      localStorage.removeItem("currentUser");
-      return false;
+      console.error("Authentication verification failed:", error);
+      // Don't clear state here - let the caller decide
+      throw error;
     }
   }
 

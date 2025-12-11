@@ -1,4 +1,5 @@
 const BASE_URL = "http://localhost:3000/";
+// const BASE_URL = "http://10.76.223.89:3000/";
 const API_BASE_URL = BASE_URL + "api/v1";
 
 class ApiService {
@@ -29,9 +30,13 @@ class ApiService {
       const error = await response
         .json()
         .catch(() => ({ message: response.statusText }));
-      throw new Error(
-        error.message || `HTTP error! status: ${response.status}`
-      );
+
+      // Create error with status code included
+      const errorMessage =
+        error.message || `HTTP error! status: ${response.status}`;
+      const err = new Error(errorMessage);
+      err.status = response.status;
+      throw err;
     }
 
     const contentType = response.headers.get("content-type");
@@ -42,12 +47,43 @@ class ApiService {
     return response;
   }
 
-  // Set tokens (call this after login)
-  // Tokens are now stored in HTTP-Only cookies set by the server
-  setTokens(accessToken, refreshToken) {
-    // Note: HTTP-Only cookies are set by the server in the Set-Cookie header
-    // The client does not need to store them explicitly
-    // This method kept for compatibility but tokens come from cookies
+  // Authenticated fetch with automatic token refresh on 401
+  async authenticatedFetch(url, options = {}) {
+    const defaultOptions = {
+      credentials: "include", // Send HTTP-only cookies
+      headers: this.getHeaders(),
+      ...options,
+    };
+
+    let response = await fetch(url, defaultOptions);
+
+    // If 401 Unauthorized, try to refresh the token
+    if (response.status === 401) {
+      try {
+        const refreshResponse = await fetch(`${this.baseURL}/auth/refresh`, {
+          method: "POST",
+          credentials: "include",
+          headers: this.getHeaders(),
+        });
+
+        if (refreshResponse.ok) {
+          // Token refreshed successfully, retry the original request
+          response = await fetch(url, defaultOptions);
+        } else {
+          // Refresh failed, throw 401 error
+          const err = new Error("Unauthorized");
+          err.status = 401;
+          throw err;
+        }
+      } catch (error) {
+        console.error("Token refresh failed:", error);
+        const err = new Error("Unauthorized");
+        err.status = 401;
+        throw err;
+      }
+    }
+
+    return response;
   }
 
   // Clear tokens (call this after logout)
@@ -174,11 +210,9 @@ class ApiService {
    * @returns {Promise<Object>} - Created order details
    */
   async createOrder(items) {
-    const response = await fetch(`${this.baseURL}/orders`, {
+    const response = await this.authenticatedFetch(`${this.baseURL}/orders`, {
       method: "POST",
-      headers: this.getHeaders(true),
       body: JSON.stringify({ items }),
-      credentials: "include",
     });
 
     return await this.handleResponse(response);
@@ -190,11 +224,12 @@ class ApiService {
    * @returns {Promise<Object>} - Order details
    */
   async getOrderById(id) {
-    const response = await fetch(`${this.baseURL}/orders/${id}`, {
-      method: "GET",
-      headers: this.getHeaders(true),
-      credentials: "include",
-    });
+    const response = await this.authenticatedFetch(
+      `${this.baseURL}/orders/${id}`,
+      {
+        method: "GET",
+      }
+    );
 
     return await this.handleResponse(response);
   }
@@ -222,11 +257,12 @@ class ApiService {
    * @returns {Promise<Object>} - User details
    */
   async getUserById(id) {
-    const response = await fetch(`${this.baseURL}/users/${id}`, {
-      method: "GET",
-      headers: this.getHeaders(true),
-      credentials: "include",
-    });
+    const response = await this.authenticatedFetch(
+      `${this.baseURL}/users/${id}`,
+      {
+        method: "GET",
+      }
+    );
 
     return await this.handleResponse(response);
   }
@@ -238,12 +274,13 @@ class ApiService {
    * @returns {Promise<Object>} - Update response
    */
   async updateUser(id, userData) {
-    const response = await fetch(`${this.baseURL}/users/${id}`, {
-      method: "PUT",
-      headers: this.getHeaders(true),
-      body: JSON.stringify(userData),
-      credentials: "include",
-    });
+    const response = await this.authenticatedFetch(
+      `${this.baseURL}/users/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(userData),
+      }
+    );
 
     return await this.handleResponse(response);
   }
@@ -254,11 +291,12 @@ class ApiService {
    * @returns {Promise<Object>} - Delete response
    */
   async deleteUser(id) {
-    const response = await fetch(`${this.baseURL}/users/${id}`, {
-      method: "DELETE",
-      headers: this.getHeaders(true),
-      credentials: "include",
-    });
+    const response = await this.authenticatedFetch(
+      `${this.baseURL}/users/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
 
     return await this.handleResponse(response);
   }

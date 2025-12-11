@@ -89,5 +89,6 @@ onMounted(async () => {
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2rem;
   margin-top: 2rem;
+  overflow: visible;
 }
 </style>
