@@ -14,19 +14,14 @@
     "/auth/login": {
       "post": {
         "summary": "Login a user",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "email",
-                  "password"
-                ],
+                "required": ["email", "password"],
                 "properties": {
                   "email": {
                     "type": "string"
@@ -41,7 +36,16 @@
         },
         "responses": {
           "200": {
-            "description": "Login successful",
+            "description": "Login successful. Tokens are set as HTTP-only cookies.",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string",
+                  "example": "accessToken=...; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=900\nrefreshToken=...; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800"
+                },
+                "description": "Secure HTTP-only cookies containing accessToken and refreshToken"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -50,14 +54,11 @@
                     "message": {
                       "type": "string"
                     },
-                    "accessToken": {
-                      "type": "string"
-                    },
-                    "refreshToken": {
-                      "type": "string"
-                    },
                     "userId": {
                       "type": "integer"
+                    },
+                    "role": {
+                      "type": "string"
                     }
                   }
                 }
@@ -79,37 +80,26 @@
     "/auth/refresh": {
       "post": {
         "summary": "Refresh access token",
-        "tags": [
-          "Auth"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "token"
-                ],
-                "properties": {
-                  "token": {
-                    "type": "string",
-                    "description": "The refresh token"
-                  }
-                }
-              }
-            }
-          }
-        },
+        "tags": ["Auth"],
+        "description": "Reads refreshToken from HTTP-only cookie and returns new accessToken via cookie",
         "responses": {
           "200": {
-            "description": "New access token generated",
+            "description": "New access token generated. New accessToken is set as HTTP-only cookie.",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string",
+                  "example": "accessToken=...; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=900"
+                },
+                "description": "Secure HTTP-only cookie containing new accessToken"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "accessToken": {
+                    "message": {
                       "type": "string"
                     }
                   }
@@ -118,7 +108,7 @@
             }
           },
           "401": {
-            "description": "Refresh token required"
+            "description": "Refresh token required (missing from cookies)"
           },
           "403": {
             "description": "Invalid or revoked refresh token"
@@ -129,31 +119,35 @@
     "/auth/logout": {
       "post": {
         "summary": "Logout user (revoke refresh token)",
-        "tags": [
-          "Auth"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "token"
-                ],
-                "properties": {
-                  "token": {
-                    "type": "string",
-                    "description": "The refresh token to revoke"
+        "tags": ["Auth"],
+        "description": "Reads refreshToken from HTTP-only cookie, revokes it from database, and clears both cookies",
+        "responses": {
+          "200": {
+            "description": "Logged out successfully. Cookies are cleared.",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string",
+                  "example": "accessToken=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0\nrefreshToken=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0"
+                },
+                "description": "Cleared HTTP-only cookies"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Logged out successfully"
+          },
+          "400": {
+            "description": "Token required (missing from cookies)"
           },
           "500": {
             "description": "Internal server error"
@@ -164,9 +158,7 @@
     "/dishes": {
       "get": {
         "summary": "Returns the list of all dishes",
-        "tags": [
-          "Dishes"
-        ],
+        "tags": ["Dishes"],
         "responses": {
           "200": {
             "description": "The list of the dishes",
@@ -188,9 +180,7 @@
       },
       "post": {
         "summary": "Create a new dish",
-        "tags": [
-          "Dishes"
-        ],
+        "tags": ["Dishes"],
         "security": [
           {
             "bearerAuth": []
@@ -203,11 +193,7 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "Name",
-                  "Price",
-                  "Ingredients"
-                ],
+                "required": ["Name", "Price", "Ingredients"],
                 "properties": {
                   "Name": {
                     "type": "string"
@@ -251,9 +237,7 @@
     "/dishes/{id}": {
       "get": {
         "summary": "Get the dish by id",
-        "tags": [
-          "Dishes"
-        ],
+        "tags": ["Dishes"],
         "parameters": [
           {
             "in": "path",
@@ -286,9 +270,7 @@
       },
       "put": {
         "summary": "Update the dish by the id",
-        "tags": [
-          "Dishes"
-        ],
+        "tags": ["Dishes"],
         "security": [
           {
             "bearerAuth": []
@@ -346,9 +328,7 @@
       },
       "delete": {
         "summary": "Remove the dish by id",
-        "tags": [
-          "Dishes"
-        ],
+        "tags": ["Dishes"],
         "security": [
           {
             "bearerAuth": []
@@ -382,9 +362,7 @@
     "/orders": {
       "get": {
         "summary": "Returns the list of all orders",
-        "tags": [
-          "Orders"
-        ],
+        "tags": ["Orders"],
         "security": [
           {
             "bearerAuth": []
@@ -411,9 +389,7 @@
       },
       "post": {
         "summary": "Create a new order",
-        "tags": [
-          "Orders"
-        ],
+        "tags": ["Orders"],
         "security": [
           {
             "bearerAuth": []
@@ -425,17 +401,13 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "items"
-                ],
+                "required": ["items"],
                 "properties": {
                   "items": {
                     "type": "array",
                     "items": {
                       "type": "object",
-                      "required": [
-                        "dishID"
-                      ],
+                      "required": ["dishID"],
                       "properties": {
                         "dishID": {
                           "type": "integer"
@@ -446,6 +418,13 @@
                         }
                       }
                     }
+                  },
+                  "delivery_address": {
+                    "type": "string"
+                  },
+                  "paid": {
+                    "type": "boolean",
+                    "default": false
                   }
                 }
               }
@@ -483,9 +462,7 @@
     "/orders/{id}": {
       "get": {
         "summary": "Get the order by id",
-        "tags": [
-          "Orders"
-        ],
+        "tags": ["Orders"],
         "security": [
           {
             "bearerAuth": []
@@ -523,9 +500,7 @@
       },
       "put": {
         "summary": "Update the order by the id",
-        "tags": [
-          "Orders"
-        ],
+        "tags": ["Orders"],
         "security": [
           {
             "bearerAuth": []
@@ -551,12 +526,7 @@
                 "properties": {
                   "Status": {
                     "type": "string",
-                    "enum": [
-                      "ordered",
-                      "processing",
-                      "delivering",
-                      "completed"
-                    ]
+                    "enum": ["ordered", "processing", "delivering", "completed"]
                   },
                   "Paid": {
                     "type": "boolean"
@@ -580,9 +550,7 @@
       },
       "delete": {
         "summary": "Remove the order by id",
-        "tags": [
-          "Orders"
-        ],
+        "tags": ["Orders"],
         "security": [
           {
             "bearerAuth": []
@@ -615,14 +583,13 @@
     "/users": {
       "get": {
         "summary": "Returns the list of all users",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "security": [
           {
             "bearerAuth": []
           }
         ],
+        "description": "Requires Admin privileges",
         "responses": {
           "200": {
             "description": "The list of the users",
@@ -644,22 +611,19 @@
       },
       "post": {
         "summary": "Create a new user",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "username",
-                  "password",
-                  "email"
-                ],
+                "required": ["username", "password", "email"],
                 "properties": {
                   "username": {
+                    "type": "string"
+                  },
+                  "last_name": {
                     "type": "string"
                   },
                   "password": {
@@ -669,6 +633,9 @@
                     "type": "string"
                   },
                   "address": {
+                    "type": "string"
+                  },
+                  "phone_number": {
                     "type": "string"
                   }
                 }
@@ -699,9 +666,7 @@
     "/users/{id}": {
       "get": {
         "summary": "Get the user by id",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "security": [
           {
             "bearerAuth": []
@@ -739,9 +704,7 @@
       },
       "delete": {
         "summary": "Remove the user by id",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "security": [
           {
             "bearerAuth": []
@@ -773,9 +736,7 @@
       },
       "put": {
         "summary": "Update the user by the id",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "security": [
           {
             "bearerAuth": []
@@ -803,6 +764,9 @@
                   "username": {
                     "type": "string"
                   },
+                  "last_name": {
+                    "type": "string"
+                  },
                   "password": {
                     "type": "string"
                   },
@@ -810,6 +774,9 @@
                     "type": "string"
                   },
                   "address": {
+                    "type": "string"
+                  },
+                  "phone_number": {
                     "type": "string"
                   }
                 }
@@ -835,11 +802,7 @@
     "schemas": {
       "Dish": {
         "type": "object",
-        "required": [
-          "Name",
-          "Price",
-          "Ingredients"
-        ],
+        "required": ["Name", "Price", "Ingredients"],
         "properties": {
           "DishID": {
             "type": "integer",
@@ -873,9 +836,7 @@
       },
       "Order": {
         "type": "object",
-        "required": [
-          "UserID"
-        ],
+        "required": ["UserID"],
         "properties": {
           "OrderID": {
             "type": "integer",
@@ -884,6 +845,10 @@
           "UserID": {
             "type": "integer",
             "description": "The id of the user who placed the order"
+          },
+          "delivery_address": {
+            "type": "string",
+            "description": "The delivery address for the order"
           },
           "Ordered_at": {
             "type": "string",
@@ -908,12 +873,7 @@
           },
           "Status": {
             "type": "string",
-            "enum": [
-              "ordered",
-              "processing",
-              "delivering",
-              "completed"
-            ],
+            "enum": ["ordered", "processing", "delivering", "completed"],
             "description": "The status of the order"
           },
           "items": {
@@ -955,11 +915,7 @@
       },
       "User": {
         "type": "object",
-        "required": [
-          "username",
-          "password",
-          "email"
-        ],
+        "required": ["username", "password", "email"],
         "properties": {
           "userID": {
             "type": "integer",
@@ -968,6 +924,10 @@
           "username": {
             "type": "string",
             "description": "The username"
+          },
+          "last_name": {
+            "type": "string",
+            "description": "The user's last name"
           },
           "password": {
             "type": "string",
@@ -981,12 +941,13 @@
             "type": "string",
             "description": "The user address"
           },
+          "phone_number": {
+            "type": "string",
+            "description": "The user phone number"
+          },
           "role": {
             "type": "string",
-            "enum": [
-              "user",
-              "admin"
-            ],
+            "enum": ["user", "admin"],
             "description": "The user role"
           },
           "created_at": {
