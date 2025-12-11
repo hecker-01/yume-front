@@ -365,7 +365,7 @@ onMounted(() => {
           </button>
           <button
             @click="handleLogout"
-            class="w-full sm:flex-1 px-6 py-2 bg-white text-red-600 font-medium rounded-md ring-2 ring-red-600 focus:ring-2 focus:ring-offset-2 focus:ring-red-600 flex items-center justify-center gap-2"
+            class="w-full sm:flex-1 px-6 py-2 bg-white hover:bg-gray-100 text-red-600 font-medium rounded-md ring-2 ring-red-600 focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center justify-center gap-2"
           >
             <font-awesome-icon icon="sign-out-alt" />
             <span>Logout</span>
@@ -377,7 +377,7 @@ onMounted(() => {
               'w-full sm:flex-1 px-6 py-2 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2',
               isAdmin()
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-500',
+                : 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
             ]"
             :title="
               isAdmin()

@@ -16,9 +16,30 @@ const orderId = route.params.id;
 const orderTotal = computed(() => {
   if (!order.value?.items) return 0;
   return order.value.items.reduce((total, item) => {
-    return total + (item.price || 0) * (item.quantity || 0);
+    const price = getItemPrice(item);
+    const quantity = getItemQuantity(item);
+    return total + price * quantity;
   }, 0);
 });
+
+const getItemPrice = (item) => {
+  // Try to get price from item first, then from dish details
+  if (item.price) return item.price;
+  const dishId = item.dishID || item.id;
+  const dish = dishDetails.value.get(dishId);
+  return dish?.Price || 0;
+};
+
+const getItemQuantity = (item) => {
+  // Handle various quantity field names and default to 1
+  return item.quantity || item.Quantity || 1;
+};
+
+const getItemSubtotal = (item) => {
+  const price = getItemPrice(item);
+  const quantity = getItemQuantity(item);
+  return price * quantity;
+};
 
 const fetchDishDetails = async (items) => {
   try {
@@ -56,6 +77,10 @@ const fetchOrderDetails = async () => {
 
     const response = await apiService.getOrderById(orderId);
     order.value = response.order || response;
+
+    // Log the order data to debug quantity issue
+    console.log("Order data:", order.value);
+    console.log("Order items:", order.value?.items);
 
     // Fetch detailed information for each dish
     if (order.value?.items && order.value.items.length > 0) {
@@ -300,11 +325,11 @@ onMounted(() => {
                         `Dish #${item.dishID}`
                       }}
                     </p>
-                    <p class="text-sm text-gray-500 mt-1">
+                    <p class="text-getItemQuantity(item)500 mt-1">
                       Quantity: {{ item.quantity }}
                     </p>
-                    <p class="text-sm text-gray-500" v-if="item.price">
-                      ${{ item.price.toFixed(2) }} each
+                    <p class="text-sm text-gray-600 mt-1">
+                      ${{ getItemPrice(item).toFixed(2) }} each
                     </p>
 
                     <!-- Display ingredients from detailed dish data -->
@@ -325,12 +350,16 @@ onMounted(() => {
                     </div>
                   </div>
                 </div>
-                <p
-                  class="font-semibold text-gray-900 ml-4"
-                  v-if="item.price && item.quantity"
-                >
-                  ${{ (item.price * item.quantity).toFixed(2) }}
-                </p>
+                <div class="ml-4 text-right">
+                  <p class="font-semibold text-gray-900 text-lg">
+                    ${{ getItemSubtotal(item).toFixed(2) }}
+                  </p>
+                  <p class="text-xs text-gray-500 mt-1">
+                    {{ getItemQuantity(item) }} × ${{
+                      getItemPrice(item).toFixed(2)
+                    }}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
