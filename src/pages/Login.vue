@@ -54,7 +54,13 @@ const handleLogin = async () => {
           Sign in to your account
         </h2>
         <p class="mt-2 text-center text-sm text-gray-600">
-          Access your orders and account settings
+          Or
+          <router-link
+            to="/signup"
+            class="font-medium text-red-600 hover:text-red-500"
+          >
+            create a new account
+          </router-link>
         </p>
       </div>
 

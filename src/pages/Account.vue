@@ -9,10 +9,13 @@ const isLoading = ref(true);
 const user = ref(null);
 const error = ref("");
 const isEditing = ref(false);
+const showDeleteConfirm = ref(false);
 const editForm = ref({
   username: "",
+  last_name: "",
   email: "",
   address: "",
+  phone_number: "",
 });
 
 const fetchUserData = async () => {
@@ -31,8 +34,10 @@ const fetchUserData = async () => {
     // Initialize edit form
     editForm.value = {
       username: user.value.username || user.value.name || "",
+      last_name: user.value.last_name || "",
       email: user.value.email || "",
       address: user.value.address || "",
+      phone_number: user.value.phone_number || "",
     };
   } catch (err) {
     console.error("Failed to fetch user data:", err);
@@ -80,10 +85,32 @@ const cancelEdit = () => {
   if (user.value) {
     editForm.value = {
       username: user.value.username || user.value.name || "",
+      last_name: user.value.last_name || "",
       email: user.value.email || "",
       address: user.value.address || "",
+      phone_number: user.value.phone_number || "",
     };
   }
+};
+
+const handleDeleteAccount = async () => {
+  try {
+    const currentUser = authService.getCurrentUser();
+    await apiService.deleteUser(currentUser.id);
+
+    // Clear user data and redirect to home
+    await authService.logout();
+    router.push({ name: "Home" });
+  } catch (err) {
+    console.error("Failed to delete account:", err);
+    error.value = err.message || "Failed to delete account";
+  } finally {
+    showDeleteConfirm.value = false;
+  }
+};
+
+const isAdmin = () => {
+  return user.value?.role === "admin";
 };
 
 onMounted(() => {
@@ -176,10 +203,28 @@ onMounted(() => {
 
             <div>
               <label class="block text-sm font-medium text-gray-700"
+                >Last Name</label
+              >
+              <p class="mt-1 text-lg text-gray-900">
+                {{ user.last_name || "Not set" }}
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
                 >Email</label
               >
               <p class="mt-1 text-lg text-gray-900">
                 {{ user.email || "N/A" }}
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >Phone Number</label
+              >
+              <p class="mt-1 text-lg text-gray-900">
+                {{ user.phone_number || "Not set" }}
               </p>
             </div>
 
@@ -205,12 +250,29 @@ onMounted(() => {
               </p>
             </div>
 
-            <div class="pt-4 border-t">
+            <div class="pt-4 border-t flex gap-3">
               <button
                 @click="isEditing = true"
-                class="w-full sm:w-auto px-6 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                class="flex-1 sm:flex-none px-6 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 Edit Profile
+              </button>
+              <button
+                @click="showDeleteConfirm = true"
+                :disabled="isAdmin()"
+                :class="[
+                  'flex-1 sm:flex-none px-6 py-2 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2',
+                  isAdmin()
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-white text-red-600 border border-red-300 hover:bg-red-50 focus:ring-red-500',
+                ]"
+                :title="
+                  isAdmin()
+                    ? 'Admins cannot delete their own account'
+                    : 'Delete account'
+                "
+              >
+                Delete Account
               </button>
             </div>
           </div>
@@ -227,11 +289,26 @@ onMounted(() => {
               <label
                 for="username"
                 class="block text-sm font-medium text-gray-700"
-                >Username</label
+                >Username <span class="text-red-500">*</span></label
               >
               <input
                 id="username"
                 v-model="editForm.username"
+                type="text"
+                required
+                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
+              />
+            </div>
+
+            <div>
+              <label
+                for="last_name"
+                class="block text-sm font-medium text-gray-700"
+                >Last Name</label
+              >
+              <input
+                id="last_name"
+                v-model="editForm.last_name"
                 type="text"
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
               />
@@ -239,12 +316,27 @@ onMounted(() => {
 
             <div>
               <label for="email" class="block text-sm font-medium text-gray-700"
-                >Email</label
+                >Email <span class="text-red-500">*</span></label
               >
               <input
                 id="email"
                 v-model="editForm.email"
                 type="email"
+                required
+                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
+              />
+            </div>
+
+            <div>
+              <label
+                for="phone_number"
+                class="block text-sm font-medium text-gray-700"
+                >Phone Number</label
+              >
+              <input
+                id="phone_number"
+                v-model="editForm.phone_number"
+                type="tel"
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
               />
             </div>
@@ -253,10 +345,11 @@ onMounted(() => {
               <label
                 for="address"
                 class="block text-sm font-medium text-gray-700"
-                >Address</label
+                >Address <span class="text-red-500">*</span></label
               >
               <textarea
                 id="address"
+                required
                 v-model="editForm.address"
                 rows="3"
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
@@ -279,6 +372,35 @@ onMounted(() => {
               </button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <!-- Delete Confirmation Modal -->
+      <div
+        v-if="showDeleteConfirm"
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50"
+        @click.self="showDeleteConfirm = false"
+      >
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Delete Account</h3>
+          <p class="text-sm text-gray-500 mb-6">
+            Are you sure you want to delete your account? This action cannot be
+            undone and all your data will be permanently removed.
+          </p>
+          <div class="flex gap-3 justify-end">
+            <button
+              @click="showDeleteConfirm = false"
+              class="px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-md hover:bg-gray-300"
+            >
+              Cancel
+            </button>
+            <button
+              @click="handleDeleteAccount"
+              class="px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700"
+            >
+              Delete Account
+            </button>
+          </div>
         </div>
       </div>
     </div>

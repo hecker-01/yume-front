@@ -3,6 +3,7 @@ import Home from "@/pages/Home.vue";
 import Orders from "@/pages/Orders.vue";
 import Account from "@/pages/Account.vue";
 import Login from "@/pages/Login.vue";
+import Signup from "@/pages/Signup.vue";
 import NotFound from "@/pages/NotFound.vue";
 import authService from "@/services/authService.js";
 
@@ -18,6 +19,12 @@ const routes = [
     name: "Login",
     component: Login,
     meta: { title: "Login • Yume Ramen" },
+  },
+  {
+    path: "/signup",
+    name: "Signup",
+    component: Signup,
+    meta: { title: "Sign Up • Yume Ramen" },
   },
   {
     path: "/orders",
