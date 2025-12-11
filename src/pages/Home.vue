@@ -27,7 +27,11 @@ onMounted(async () => {
 
     console.log("Processed dishes:", dishes.value);
   } catch (err) {
-    error.value = err.message || "Failed to fetch dishes";
+    if (err.status === 500) {
+      error.value = "Something went wrong. Please try again later.";
+    } else {
+      error.value = err.message || "Failed to fetch dishes";
+    }
     console.error("Error fetching dishes:", err);
   } finally {
     loading.value = false;

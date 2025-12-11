@@ -41,12 +41,16 @@ const fetchUserData = async () => {
     };
   } catch (err) {
     console.error("Failed to fetch user data:", err);
-    error.value = err.message || "Failed to load account information";
 
     // If 401, token is invalid - redirect to login
     if (err.message.includes("401") || err.message.includes("Unauthorized")) {
       await authService.logout();
       router.push({ name: "Login", query: { redirect: "/account" } });
+      return;
+    } else if (err.status === 500) {
+      error.value = "Something went wrong. Please try again later.";
+    } else {
+      error.value = err.message || "Failed to load account information";
     }
   } finally {
     isLoading.value = false;

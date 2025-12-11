@@ -20,21 +20,21 @@ const fetchOrders = async () => {
       throw new Error("User not found");
     }
 
-    // Fetch user's orders (you may need to add a getOrdersByUserId method to apiService)
-    // For now, we'll just show a placeholder
-    // const response = await apiService.getOrdersByUserId(currentUser.id);
-    // orders.value = response.orders || [];
-
-    // Placeholder - replace with actual API call
-    orders.value = [];
+    // Fetch user's orders
+    const response = await apiService.getOrders();
+    orders.value = response.orders || response || [];
   } catch (err) {
     console.error("Failed to fetch orders:", err);
-    error.value = err.message || "Failed to load orders";
 
     // If 401, token is invalid - redirect to login
     if (err.message.includes("401") || err.message.includes("Unauthorized")) {
       await authService.logout();
       router.push({ name: "Login", query: { redirect: "/orders" } });
+      return;
+    } else if (err.status === 500) {
+      error.value = "Something went wrong. Please try again later.";
+    } else {
+      error.value = err.message || "Failed to load orders";
     }
   } finally {
     isLoading.value = false;
@@ -143,37 +143,59 @@ onMounted(() => {
       <div v-else class="space-y-4">
         <div
           v-for="order in orders"
-          :key="order.id"
+          :key="order.OrderID || order.id"
           class="bg-white shadow rounded-lg p-6 hover:shadow-md transition-shadow"
         >
           <div class="flex justify-between items-start mb-4">
             <div>
               <h3 class="text-lg font-semibold text-gray-900">
-                Order #{{ order.id }}
+                Order #{{ order.OrderID || order.id }}
               </h3>
               <p class="text-sm text-gray-500">
-                {{ new Date(order.createdAt).toLocaleDateString() }}
+                {{
+                  new Date(
+                    order.Ordered_at || order.createdAt
+                  ).toLocaleDateString()
+                }}
               </p>
             </div>
             <span
               class="px-3 py-1 text-sm font-semibold rounded-full"
               :class="{
-                'bg-yellow-100 text-yellow-800': order.status === 'pending',
-                'bg-blue-100 text-blue-800': order.status === 'preparing',
-                'bg-green-100 text-green-800': order.status === 'completed',
-                'bg-red-100 text-red-800': order.status === 'cancelled',
+                'bg-yellow-100 text-yellow-800':
+                  order.Status === 'ordered' || order.status === 'pending',
+                'bg-blue-100 text-blue-800':
+                  order.Status === 'processing' || order.status === 'preparing',
+                'bg-green-100 text-green-800':
+                  order.Status === 'completed' || order.status === 'completed',
+                'bg-red-100 text-red-800':
+                  order.Status === 'cancelled' || order.status === 'cancelled',
               }"
             >
-              {{ order.status }}
+              {{ order.Status || order.status }}
             </span>
           </div>
           <div class="border-t pt-4">
             <p class="text-sm text-gray-600">
               Items: {{ order.items?.length || 0 }}
             </p>
-            <p class="text-lg font-bold text-gray-900 mt-2">
-              ${{ order.total?.toFixed(2) }}
+            <p class="text-sm text-gray-600 mt-1" v-if="order.delivery_address">
+              Delivery: {{ order.delivery_address }}
             </p>
+            <div class="flex justify-between items-center mt-3">
+              <span
+                class="text-sm font-medium"
+                :class="order.Paid ? 'text-green-600' : 'text-red-600'"
+              >
+                {{ order.Paid ? "Paid" : "Unpaid" }}
+              </span>
+              <button
+                @click="router.push(`/orders/${order.OrderID || order.id}`)"
+                class="text-sm font-medium text-red-600 hover:text-red-700"
+              >
+                View Details
+              </button>
+            </div>
           </div>
         </div>
       </div>

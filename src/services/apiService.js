@@ -205,6 +205,18 @@ class ApiService {
   // ========== ORDERS ENDPOINTS ==========
 
   /**
+   * Get all orders for the current user
+   * @returns {Promise<Array>} - List of user's orders
+   */
+  async getOrders() {
+    const response = await this.authenticatedFetch(`${this.baseURL}/orders`, {
+      method: "GET",
+    });
+
+    return await this.handleResponse(response);
+  }
+
+  /**
    * Create a new order
    * @param {Array} items - Array of items with dishID and quantity
    * @returns {Promise<Object>} - Created order details

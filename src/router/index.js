@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "@/pages/Home.vue";
 import Orders from "@/pages/Orders.vue";
+import OrderDetail from "@/pages/OrderDetail.vue";
 import Account from "@/pages/Account.vue";
 import Login from "@/pages/Login.vue";
 import Signup from "@/pages/Signup.vue";
@@ -32,6 +33,15 @@ const routes = [
     component: Orders,
     meta: {
       title: "Orders • Yume Ramen",
+      requiresAuth: true,
+    },
+  },
+  {
+    path: "/orders/:id",
+    name: "OrderDetail",
+    component: OrderDetail,
+    meta: {
+      title: "Order Details • Yume Ramen",
       requiresAuth: true,
     },
   },
