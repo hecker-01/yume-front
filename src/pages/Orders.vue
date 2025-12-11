@@ -49,7 +49,9 @@ onMounted(() => {
 <template>
   <div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
-      <h1 class="text-3xl font-bold text-gray-900 mb-8">Your Orders</h1>
+      <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">
+        Your Orders
+      </h1>
 
       <!-- Loading Skeleton -->
       <div v-if="isLoading" class="space-y-4">
@@ -99,8 +101,9 @@ onMounted(() => {
             <p class="mt-2 text-sm text-red-700">{{ error }}</p>
             <button
               @click="fetchOrders"
-              class="mt-3 text-sm font-medium text-red-600 hover:text-red-500"
+              class="mt-3 text-sm font-medium text-red-600 hover:text-red-500 inline-flex items-center"
             >
+              <font-awesome-icon icon="redo" class="mr-1" />
               Try again
             </button>
           </div>
@@ -134,6 +137,7 @@ onMounted(() => {
             @click="router.push('/')"
             class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           >
+            <font-awesome-icon icon="home" class="mr-2" />
             Browse Menu
           </button>
         </div>
@@ -191,8 +195,9 @@ onMounted(() => {
               </span>
               <button
                 @click="router.push(`/orders/${order.OrderID || order.id}`)"
-                class="text-sm font-medium text-red-600 hover:text-red-700"
+                class="text-sm font-medium text-red-600 hover:text-red-700 inline-flex items-center"
               >
+                <font-awesome-icon icon="eye" class="mr-1" />
                 View Details
               </button>
             </div>

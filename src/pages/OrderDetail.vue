@@ -127,19 +127,7 @@ onMounted(() => {
         @click="router.push('/orders')"
         class="mb-6 inline-flex items-center text-sm font-medium text-gray-600 hover:text-gray-900"
       >
-        <svg
-          class="w-5 h-5 mr-1"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
+        <font-awesome-icon icon="arrow-left" class="mr-2" />
         Back to Orders
       </button>
 
@@ -184,14 +172,16 @@ onMounted(() => {
               <button
                 v-if="error !== 'Order not found'"
                 @click="fetchOrderDetails"
-                class="text-sm font-medium text-red-600 hover:text-red-500"
+                class="text-sm font-medium text-red-600 hover:text-red-500 inline-flex items-center"
               >
+                <font-awesome-icon icon="redo" class="mr-1" />
                 Try again
               </button>
               <button
                 @click="router.push('/orders')"
-                class="text-sm font-medium text-red-600 hover:text-red-500"
+                class="text-sm font-medium text-red-600 hover:text-red-500 inline-flex items-center"
               >
+                <font-awesome-icon icon="clipboard-list" class="mr-1" />
                 View all orders
               </button>
             </div>

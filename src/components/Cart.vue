@@ -193,10 +193,12 @@ watch(
 
         <div class="cart-actions">
           <button class="clear-cart-btn" @click="clearAllCart">
-            Clear Cart
+            <font-awesome-icon icon="trash-alt" />
+            <span>Clear Cart</span>
           </button>
           <button class="checkout-btn" @click="checkout">
-            Proceed to Checkout
+            <font-awesome-icon icon="shopping-cart" />
+            <span>Proceed to Checkout</span>
           </button>
         </div>
       </div>
@@ -432,6 +434,8 @@ watch(
   border-top: 1px solid #e5e7eb;
   padding: 1.5rem;
   background-color: #f9fafb;
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
 }
 
 @media (max-width: 768px) {
@@ -480,6 +484,10 @@ watch(
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .clear-cart-btn {

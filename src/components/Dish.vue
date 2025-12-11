@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, ref } from "vue";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { BASE_URL } from "@/services/apiService";
 import { setCartItem, getCartItem } from "@/services/cartService";
@@ -68,8 +68,14 @@ console.log("Dish component received dish:", props.dish);
           :class="{ adding: isAddingToCart }"
           @click="addToCart"
         >
-          <span v-if="!isAddingToCart">Add to Cart</span>
-          <span v-else>Added!</span>
+          <span v-if="!isAddingToCart" class="btn-content">
+            <font-awesome-icon icon="shopping-cart" />
+            <span>Add to Cart</span>
+          </span>
+          <span v-else class="btn-content">
+            <font-awesome-icon icon="check" />
+            <span>Added!</span>
+          </span>
         </button>
       </div>
     </div>
@@ -167,6 +173,13 @@ console.log("Dish component received dish:", props.dish);
   transition: all 0.2s;
   white-space: nowrap;
   min-width: 110px;
+}
+
+.btn-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .add-to-cart-btn.adding {

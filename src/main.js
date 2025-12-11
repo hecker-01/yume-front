@@ -15,9 +15,38 @@ import {
   faTrash,
   faPlus,
   faMinus,
+  faEdit,
+  faSignOutAlt,
+  faTrashAlt,
+  faSave,
+  faCheck,
+  faSignInAlt,
+  faUserPlus,
+  faEye,
+  faArrowLeft,
+  faRedo,
 } from "@fortawesome/free-solid-svg-icons";
 
-library.add(faHome, faClipboardList, faUserCircle, faShoppingCart, faTimes, faTrash, faPlus, faMinus);
+library.add(
+  faHome,
+  faClipboardList,
+  faUserCircle,
+  faShoppingCart,
+  faTimes,
+  faTrash,
+  faPlus,
+  faMinus,
+  faEdit,
+  faSignOutAlt,
+  faTrashAlt,
+  faSave,
+  faCheck,
+  faSignInAlt,
+  faUserPlus,
+  faEye,
+  faArrowLeft,
+  faRedo
+);
 
 const app = createApp(App);
 app.component("font-awesome-icon", FontAwesomeIcon);
