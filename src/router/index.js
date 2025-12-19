@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import Home from "@/pages/Home.vue";
 import Orders from "@/pages/Orders.vue";
 import OrderDetail from "@/pages/OrderDetail.vue";
+import DishDetails from "@/pages/DishDetails.vue";
 import Account from "@/pages/Account.vue";
 import Login from "@/pages/Login.vue";
 import Signup from "@/pages/Signup.vue";
@@ -44,6 +45,12 @@ const routes = [
       title: "Order Details • Yume Ramen",
       requiresAuth: true,
     },
+  },
+  {
+    path: "/details/:id",
+    name: "DishDetails",
+    component: DishDetails,
+    meta: { title: "Dish Details • Yume Ramen" },
   },
   {
     path: "/account",

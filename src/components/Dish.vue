@@ -17,7 +17,7 @@ const isAddingToCart = ref(false);
 const imageUrl = props.dish.Image ? BASE_URL + props.dish.Image : null;
 
 const viewDetails = () => {
-  router.push(`/dish/${props.dish.DishID}`);
+  router.push(`/details/${props.dish.DishID}`);
 };
 
 const addToCart = (event) => {
