@@ -46,7 +46,7 @@ onMounted(async () => {
     <div v-else-if="error" class="error">
       <p>Error: {{ error }}</p>
       <p class="error-hint">
-        Make sure the API server is running on http://localhost:3000
+        Make sure the API server is running and accessible.
       </p>
     </div>
     <div v-else-if="dishes.length === 0" class="empty">

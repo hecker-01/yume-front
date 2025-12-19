@@ -1,5 +1,5 @@
 const BASE_URL = "http://localhost:3000/";
-// const BASE_URL = "http://10.76.223.89:3000/";
+// const BASE_URL = "https://yume-api.heckerdev.net:3000/";
 const API_BASE_URL = BASE_URL + "api/v1";
 
 class ApiService {
