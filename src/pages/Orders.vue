@@ -23,6 +23,14 @@ const fetchOrders = async () => {
     // Fetch user's orders
     const response = await apiService.getOrders();
     orders.value = response.orders || response || [];
+
+    // Update unpaid orders status in localStorage
+    const hasUnpaid = orders.value.some(
+      (order) => !order.Paid && order.Paid !== true
+    );
+    localStorage.setItem("hasUnpaidOrders", hasUnpaid.toString());
+    localStorage.setItem("lastUnpaidOrderCheck", Date.now().toString());
+    window.dispatchEvent(new Event("unpaidOrdersUpdated"));
   } catch (err) {
     console.error("Failed to fetch orders:", err);
 

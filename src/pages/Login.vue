@@ -20,6 +20,11 @@ const handleLogin = async () => {
 
   try {
     await authService.login(email.value, password.value);
+
+    // Trigger unpaid orders check
+    localStorage.removeItem("lastUnpaidOrderCheck");
+    window.dispatchEvent(new Event("unpaidOrdersUpdated"));
+
     // Redirect to the page they tried to access or home
     const redirectTo = router.currentRoute.value.query.redirect || "/";
     router.push(redirectTo);

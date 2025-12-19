@@ -1,12 +1,16 @@
 <script setup>
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { getCartItemCount } from "@/services/cartService";
 import Cart from "@/components/Cart.vue";
+import apiService from "@/services/apiService";
+import authService from "@/services/authService";
 
 const route = useRoute();
+const router = useRouter();
 const showCart = ref(false);
 const cartItemCount = ref(0);
+const hasUnpaidOrders = ref(false);
 
 const updateCartCount = () => {
   cartItemCount.value = getCartItemCount();
@@ -22,23 +26,86 @@ const closeCart = () => {
 
 const hasCartItems = computed(() => cartItemCount.value > 0);
 
+const checkUnpaidOrders = async () => {
+  // Check if user is logged in
+  if (!authService.isAuthenticated()) {
+    hasUnpaidOrders.value = false;
+    localStorage.removeItem("hasUnpaidOrders");
+    return;
+  }
+
+  // Check localStorage first to avoid API spam
+  const cachedStatus = localStorage.getItem("hasUnpaidOrders");
+  const lastCheck = localStorage.getItem("lastUnpaidOrderCheck");
+  const now = Date.now();
+
+  // Use cached value if it exists and was checked recently (within 5 minutes)
+  if (
+    cachedStatus !== null &&
+    lastCheck &&
+    now - parseInt(lastCheck) < 5 * 60 * 1000
+  ) {
+    hasUnpaidOrders.value = cachedStatus === "true";
+    return;
+  }
+
+  // Fetch from API
+  try {
+    const response = await apiService.getOrders();
+    const orders = response.orders || response || [];
+
+    // Check if any order is unpaid
+    const hasUnpaid = orders.some(
+      (order) => !order.Paid && order.Paid !== true
+    );
+
+    hasUnpaidOrders.value = hasUnpaid;
+    localStorage.setItem("hasUnpaidOrders", hasUnpaid.toString());
+    localStorage.setItem("lastUnpaidOrderCheck", now.toString());
+  } catch (error) {
+    console.error("Failed to check unpaid orders:", error);
+  }
+};
+
+const handleUnpaidOrdersUpdated = () => {
+  // Force recheck when this event is triggered
+  localStorage.removeItem("lastUnpaidOrderCheck");
+  checkUnpaidOrders();
+};
+
+const goToOrders = () => {
+  router.push("/orders");
+};
+
 // Update cart count on mount
 onMounted(() => {
   updateCartCount();
+  checkUnpaidOrders();
+
   // Listen for storage events to update cart count when changed in other tabs/components
   window.addEventListener("storage", updateCartCount);
   // Custom event for same-tab updates
   window.addEventListener("cartUpdated", updateCartCount);
+  // Custom event for unpaid orders updates
+  window.addEventListener("unpaidOrdersUpdated", handleUnpaidOrdersUpdated);
 });
 
 onUnmounted(() => {
   window.removeEventListener("storage", updateCartCount);
   window.removeEventListener("cartUpdated", updateCartCount);
+  window.removeEventListener("unpaidOrdersUpdated", handleUnpaidOrdersUpdated);
 });
 </script>
 
 <template>
   <nav class="nav-container">
+    <!-- Unpaid Orders Banner -->
+    <div v-if="hasUnpaidOrders" class="unpaid-banner" @click="goToOrders">
+      <font-awesome-icon icon="exclamation-circle" class="banner-icon" />
+      <span class="banner-text">You have unpaid orders</span>
+      <font-awesome-icon icon="chevron-right" class="banner-arrow" />
+    </div>
+
     <!-- Floating Cart Icon -->
     <button
       v-if="hasCartItems"
@@ -103,6 +170,64 @@ onUnmounted(() => {
   color: white;
   z-index: 50;
   box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Unpaid Orders Banner */
+.unpaid-banner {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: var(--charcoal);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 768px) {
+  .unpaid-banner {
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    font-size: 0.95rem;
+  }
+}
+
+.unpaid-banner:hover {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  transform: translateY(-2px);
+}
+
+.banner-icon {
+  font-size: 1.1rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.banner-text {
+  flex: 1;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .banner-text {
+    flex: initial;
+  }
+}
+
+.banner-arrow {
+  font-size: 0.875rem;
 }
 
 @media (min-width: 768px) {

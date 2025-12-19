@@ -25,6 +25,17 @@ import {
   faEye,
   faArrowLeft,
   faRedo,
+  faCreditCard,
+  faBug,
+  faCheckCircle,
+  faExclamationCircle,
+  faChevronRight,
+  faSpinner,
+  faImage,
+  faWallet,
+  faUniversity,
+  faMobileAlt,
+  faMoneyBillWave,
 } from "@fortawesome/free-solid-svg-icons";
 
 library.add(
@@ -45,7 +56,18 @@ library.add(
   faUserPlus,
   faEye,
   faArrowLeft,
-  faRedo
+  faRedo,
+  faCreditCard,
+  faBug,
+  faCheckCircle,
+  faExclamationCircle,
+  faChevronRight,
+  faSpinner,
+  faImage,
+  faWallet,
+  faUniversity,
+  faMobileAlt,
+  faMoneyBillWave
 );
 
 const app = createApp(App);

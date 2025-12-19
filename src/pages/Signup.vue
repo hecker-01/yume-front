@@ -52,6 +52,10 @@ const handleSignup = async () => {
       role: "user",
     });
 
+    // Clear any existing unpaid orders data for new user
+    localStorage.removeItem("hasUnpaidOrders");
+    localStorage.removeItem("lastUnpaidOrderCheck");
+
     // Redirect to login page after successful signup
     router.push({
       name: "Login",

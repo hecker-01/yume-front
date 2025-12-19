@@ -394,7 +394,7 @@ onMounted(() => {
       <!-- Delete Confirmation Modal -->
       <div
         v-if="showDeleteConfirm"
-        class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50"
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-[100]"
         @click.self="showDeleteConfirm = false"
       >
         <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">

@@ -4,6 +4,7 @@ import { useRouter, useRoute } from "vue-router";
 import apiService from "@/services/apiService.js";
 import { BASE_URL } from "@/services/apiService.js";
 import authService from "@/services/authService.js";
+import Payment from "@/components/Payment.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -11,6 +12,7 @@ const isLoading = ref(true);
 const order = ref(null);
 const error = ref("");
 const dishDetails = ref(new Map());
+const showPaymentPopup = ref(false);
 
 const orderId = route.params.id;
 
@@ -150,6 +152,26 @@ const getImageUrl = (item) => {
 
   // Otherwise, prepend BASE_URL
   return BASE_URL + imagePath;
+};
+
+const openPaymentPopup = () => {
+  showPaymentPopup.value = true;
+};
+
+const closePaymentPopup = () => {
+  showPaymentPopup.value = false;
+};
+
+const handlePaymentComplete = async () => {
+  // Close popup
+  closePaymentPopup();
+
+  // Refresh order details to show updated payment status
+  await fetchOrderDetails();
+
+  // Update unpaid orders status
+  localStorage.removeItem("lastUnpaidOrderCheck");
+  window.dispatchEvent(new Event("unpaidOrdersUpdated"));
 };
 
 onMounted(() => {
@@ -386,6 +408,17 @@ onMounted(() => {
                 {{ order.Paid ? "Paid" : "Unpaid" }}
               </span>
             </div>
+
+            <!-- Payment Button (shown when order is not paid) -->
+            <div v-if="!order.Paid" class="mt-4">
+              <button
+                @click="openPaymentPopup"
+                class="w-full px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+              >
+                <font-awesome-icon icon="credit-card" class="mr-2" />
+                Pay Now
+              </button>
+            </div>
           </div>
         </div>
 
@@ -400,6 +433,15 @@ onMounted(() => {
           <p class="text-gray-700">{{ order.delivery_address }}</p>
         </div>
       </div>
+
+      <!-- Payment Component -->
+      <Payment
+        v-if="showPaymentPopup"
+        :orderId="orderId"
+        :orderTotal="orderTotal"
+        @close="closePaymentPopup"
+        @paymentComplete="handlePaymentComplete"
+      />
     </div>
   </div>
 </template>

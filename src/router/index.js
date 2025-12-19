@@ -6,6 +6,7 @@ import DishDetails from "@/pages/DishDetails.vue";
 import Account from "@/pages/Account.vue";
 import Login from "@/pages/Login.vue";
 import Signup from "@/pages/Signup.vue";
+import Checkout from "@/pages/Chechout.vue";
 import NotFound from "@/pages/NotFound.vue";
 import authService from "@/services/authService.js";
 
@@ -58,6 +59,15 @@ const routes = [
     component: Account,
     meta: {
       title: "Account • Yume Ramen",
+      requiresAuth: true,
+    },
+  },
+  {
+    path: "/checkout",
+    name: "Checkout",
+    component: Checkout,
+    meta: {
+      title: "Checkout • Yume Ramen",
       requiresAuth: true,
     },
   },

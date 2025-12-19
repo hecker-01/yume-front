@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
+import { useRouter } from "vue-router";
 import {
   getCart,
   setCartItem,
@@ -8,8 +9,10 @@ import {
 } from "@/services/cartService";
 import api from "@/services/apiService";
 import { BASE_URL } from "@/services/apiService";
+import authService from "@/services/authService";
 
 const emit = defineEmits(["close", "update"]);
+const router = useRouter();
 
 const cart = ref([]);
 const dishes = ref([]);
@@ -82,8 +85,16 @@ const clearAllCart = () => {
 };
 
 const checkout = () => {
-  // TODO: Implement checkout flow
-  alert("Checkout functionality coming soon!");
+  // Check if user is logged in
+  if (!authService.isAuthenticated()) {
+    // Close cart and redirect to login with redirect back to checkout
+    emit("close");
+    router.push({ name: "Login", query: { redirect: "/checkout" } });
+  } else {
+    // User is logged in, proceed to checkout
+    emit("close");
+    router.push({ name: "Checkout" });
+  }
 };
 
 const getImageUrl = (dish) => {

@@ -82,6 +82,9 @@ class AuthService {
       this.currentUser = null;
       this.isLoggedIn = false;
       localStorage.removeItem("currentUser");
+      localStorage.removeItem("hasUnpaidOrders");
+      localStorage.removeItem("lastUnpaidOrderCheck");
+      window.dispatchEvent(new Event("unpaidOrdersUpdated"));
       return { message: "Logged out successfully" };
     } catch (error) {
       console.error("Logout error:", error);
@@ -89,7 +92,9 @@ class AuthService {
       this.currentUser = null;
       this.isLoggedIn = false;
       localStorage.removeItem("currentUser");
-      apiService.clearTokens();
+      localStorage.removeItem("hasUnpaidOrders");
+      localStorage.removeItem("lastUnpaidOrderCheck");
+      window.dispatchEvent(new Event("unpaidOrdersUpdated"));
       throw error;
     }
   }

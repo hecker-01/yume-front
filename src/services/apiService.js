@@ -10,7 +10,7 @@ class ApiService {
   }
 
   // Helper method to get headers
-  getHeaders(includeAuth = false, isMultipart = false) {
+  getHeaders(isMultipart = false) {
     const headers = {};
 
     if (!isMultipart) {
@@ -86,29 +86,6 @@ class ApiService {
     return response;
   }
 
-  // Clear tokens (call this after logout)
-  clearTokens() {
-    // HTTP-Only cookies are managed by the server
-    // Client cannot directly delete them, but server will invalidate on logout
-    this.accessToken = null;
-    this.refreshToken = null;
-  }
-
-  // Load tokens from localStorage (not used with HTTP-Only cookies)
-  loadTokens() {
-    // With HTTP-Only cookies, tokens are automatically sent by the browser
-    // This method is kept for backward compatibility
-  }
-
-  // Check if user is authenticated
-  // With HTTP-Only cookies, we rely on server validation
-  // Client tracks authentication state through authService
-  isAuthenticated() {
-    // This is maintained for backward compatibility
-    // Actual authentication check is done by authService
-    return true; // Cookie presence is verified by server
-  }
-
   // ========== AUTH ENDPOINTS ==========
 
   /**
@@ -163,12 +140,10 @@ class ApiService {
       });
 
       const data = await this.handleResponse(response);
-      this.clearTokens();
 
       return data;
     } catch (error) {
       // Clear local state even if logout API fails
-      this.clearTokens();
       throw error;
     }
   }
@@ -219,12 +194,20 @@ class ApiService {
   /**
    * Create a new order
    * @param {Array} items - Array of items with dishID and quantity
+   * @param {string} deliveryAddress - Delivery address for the order
    * @returns {Promise<Object>} - Created order details
    */
-  async createOrder(items) {
+  async createOrder(items, deliveryAddress) {
+    const orderData = { items };
+
+    // Add delivery address if provided
+    if (deliveryAddress) {
+      orderData.delivery_address = deliveryAddress;
+    }
+
     const response = await this.authenticatedFetch(`${this.baseURL}/orders`, {
       method: "POST",
-      body: JSON.stringify({ items }),
+      body: JSON.stringify(orderData),
     });
 
     return await this.handleResponse(response);
@@ -240,6 +223,23 @@ class ApiService {
       `${this.baseURL}/orders/${id}`,
       {
         method: "GET",
+      }
+    );
+
+    return await this.handleResponse(response);
+  }
+
+  /**
+   * Mark an order as paid (complete payment)
+   * @param {number} id - Order ID
+   * @returns {Promise<Object>} - Updated order details
+   */
+  async paymentComplete(id) {
+    const response = await this.authenticatedFetch(
+      `${this.baseURL}/orders/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ Paid: true }),
       }
     );
 
@@ -316,9 +316,6 @@ class ApiService {
 
 // Create and export a singleton instance
 const apiService = new ApiService();
-
-// Load tokens on initialization
-apiService.loadTokens();
 
 export { BASE_URL };
 export default apiService;
