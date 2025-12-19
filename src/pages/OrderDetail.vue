@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import apiService from "@/services/apiService.js";
+import { BASE_URL } from "@/services/apiService.js";
 import authService from "@/services/authService.js";
 
 const router = useRouter();
@@ -32,7 +33,7 @@ const getItemPrice = (item) => {
 
 const getItemQuantity = (item) => {
   // Handle various quantity field names and default to 1
-  return item.quantity || item.Quantity || 1;
+  return item.quantity || item.Quantity || item.aantal || 1;
 };
 
 const getItemSubtotal = (item) => {
@@ -77,10 +78,6 @@ const fetchOrderDetails = async () => {
 
     const response = await apiService.getOrderById(orderId);
     order.value = response.order || response;
-
-    // Log the order data to debug quantity issue
-    console.log("Order data:", order.value);
-    console.log("Order items:", order.value?.items);
 
     // Fetch detailed information for each dish
     if (order.value?.items && order.value.items.length > 0) {
@@ -137,6 +134,22 @@ const getStatusColor = (status) => {
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
   return new Date(dateString).toLocaleString();
+};
+
+const getImageUrl = (item) => {
+  // Try item.image first, then dish details
+  const imagePath =
+    item.image || dishDetails.value.get(item.dishID || item.id)?.Image;
+
+  if (!imagePath) return null;
+
+  // If it's already a full URL (starts with http), use it as-is
+  if (imagePath.startsWith("http")) {
+    return imagePath;
+  }
+
+  // Otherwise, prepend BASE_URL
+  return BASE_URL + imagePath;
 };
 
 onMounted(() => {
@@ -305,14 +318,8 @@ onMounted(() => {
               <div class="flex justify-between items-start">
                 <div class="flex items-start space-x-4 flex-1">
                   <img
-                    v-if="
-                      item.image ||
-                      dishDetails.get(item.dishID || item.id)?.Image
-                    "
-                    :src="
-                      item.image ||
-                      dishDetails.get(item.dishID || item.id)?.Image
-                    "
+                    v-if="getImageUrl(item)"
+                    :src="getImageUrl(item)"
                     :alt="item.name || item.dishName"
                     class="w-20 h-20 object-cover rounded"
                   />
@@ -325,8 +332,8 @@ onMounted(() => {
                         `Dish #${item.dishID}`
                       }}
                     </p>
-                    <p class="text-getItemQuantity(item)500 mt-1">
-                      Quantity: {{ item.quantity }}
+                    <p class="text-gray-500 mt-1">
+                      Quantity: {{ getItemQuantity(item) }}
                     </p>
                     <p class="text-sm text-gray-600 mt-1">
                       ${{ getItemPrice(item).toFixed(2) }} each

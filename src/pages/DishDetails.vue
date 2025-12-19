@@ -32,12 +32,8 @@ const fetchDish = async () => {
   try {
     isLoading.value = true;
     error.value = "";
-    console.log("Fetching dish with ID:", dishId);
     const response = await apiService.getDishById(dishId);
-    console.log("API response:", response);
     dish.value = response.dish || response;
-    console.log("Dish image field:", dish.value?.Image);
-    console.log("Constructed image URL:", imageUrl.value);
   } catch (err) {
     console.error("Failed to fetch dish:", err);
     error.value = err.message || "Failed to load dish details";
