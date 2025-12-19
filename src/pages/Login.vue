@@ -101,7 +101,10 @@ const handleLogin = async () => {
           </div>
         </div>
 
-        <div v-if="error" class="rounded-md bg-red-50 p-4">
+        <div
+          v-if="error"
+          class="rounded-md bg-red-50 border border-red-200 p-4"
+        >
           <div class="flex">
             <div class="flex-shrink-0">
               <svg
@@ -118,7 +121,8 @@ const handleLogin = async () => {
               </svg>
             </div>
             <div class="ml-3">
-              <p class="text-sm font-medium text-red-800">{{ error }}</p>
+              <h3 class="text-sm font-medium text-red-800">Login failed</h3>
+              <p class="mt-2 text-sm text-red-700">{{ error }}</p>
             </div>
           </div>
         </div>

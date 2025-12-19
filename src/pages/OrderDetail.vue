@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, onBeforeUnmount, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import apiService from "@/services/apiService.js";
 import { BASE_URL } from "@/services/apiService.js";
@@ -13,6 +13,7 @@ const order = ref(null);
 const error = ref("");
 const dishDetails = ref(new Map());
 const showPaymentPopup = ref(false);
+let refreshInterval = null;
 
 const orderId = route.params.id;
 
@@ -176,6 +177,18 @@ const handlePaymentComplete = async () => {
 
 onMounted(() => {
   fetchOrderDetails();
+
+  // Refresh order data every 20 seconds
+  refreshInterval = setInterval(() => {
+    fetchOrderDetails();
+  }, 20000);
+});
+
+onBeforeUnmount(() => {
+  // Clean up interval when component is unmounted
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+  }
 });
 </script>
 

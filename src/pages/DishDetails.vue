@@ -123,6 +123,13 @@ onMounted(() => {
           <div class="ml-3">
             <h3 class="text-sm font-medium text-red-800">Error loading dish</h3>
             <p class="mt-2 text-sm text-red-700">{{ error }}</p>
+            <button
+              @click="fetchDish"
+              class="mt-3 text-sm font-medium text-red-600 hover:text-red-500 inline-flex items-center"
+            >
+              <font-awesome-icon icon="redo" class="mr-1" />
+              Try again
+            </button>
           </div>
         </div>
       </div>
