@@ -34,8 +34,13 @@ jobs:
           git clean -fxd
 
       - name: Copy build output
-        run: |
-          cp -r dist/* .
+  run: |
+    if [ -d "dist" ]; then
+      cp -r dist/* .
+    else
+      echo "ERROR: dist/ folder not found"
+      exit 1
+    fi
 
       - name: Commit and push
         run: |
