@@ -3,7 +3,7 @@ name: build to branch production
 on:
   push:
     branches:
-      - master
+      - main
   workflow_dispatch:
 
 permissions:
@@ -26,7 +26,7 @@ jobs:
 
       - name: Preserve build output
         run: |
-          mkdir /tmp/dist
+          mkdir -p /tmp/dist
           cp -r dist/* /tmp/dist/
 
       - name: Switch to production branch
@@ -41,6 +41,11 @@ jobs:
       - name: Restore build output
         run: |
           cp -r /tmp/dist/* .
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Commit and push
         run: |
