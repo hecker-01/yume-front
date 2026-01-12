@@ -1,0 +1,29 @@
+name: build to branch production
+
+on:
+    workflow_dispatch:
+    push:
+        branches:
+            - master
+
+permissions:
+    contents: write
+
+jobs:
+    build-and-send:
+        runs-on: ubuntu-latest
+        steps:
+            - name: checkout
+              uses: actions/checkout@v3
+            - name: install & build
+              run: |
+                  npm ci
+                  npm run build
+            - name: send to production branch
+              uses: stefanzweifel/git-auto-commit-action@v4
+              with:
+                  commit_message: "Production build from master - ${{ github.sha }}"
+                  branch: production
+                  file_pattern: "build/"
+                  commit_user_name: "github-actions[bot]"
+                  commit_user_email: "41898282+github-actions[bot]@users.noreply.github.com"
