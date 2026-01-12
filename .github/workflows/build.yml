@@ -1,29 +1,44 @@
 name: build to branch production
 
 on:
-    workflow_dispatch:
-    push:
-        branches:
-            - master
+  push:
+    branches:
+      - master
+  workflow_dispatch:
 
 permissions:
-    contents: write
+  contents: write
 
 jobs:
-    build-and-send:
-        runs-on: ubuntu-latest
-        steps:
-            - name: checkout
-              uses: actions/checkout@v3
-            - name: install & build
-              run: |
-                  npm ci
-                  npm run build
-            - name: send to production branch
-              uses: stefanzweifel/git-auto-commit-action@v4
-              with:
-                  commit_message: "Production build from master - ${{ github.sha }}"
-                  branch: production
-                  file_pattern: "build/"
-                  commit_user_name: "github-actions[bot]"
-                  commit_user_email: "41898282+github-actions[bot]@users.noreply.github.com"
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # REQUIRED to switch branches
+
+      - name: Install & build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Switch to production branch
+        run: |
+          git checkout production || git checkout -b production
+
+      - name: Clean production branch
+        run: |
+          git rm -rf .
+          git clean -fxd
+
+      - name: Copy build output
+        run: |
+          cp -r dist/* .
+
+      - name: Commit and push
+        run: |
+          git add .
+          git commit -m "Production build from master (${GITHUB_SHA})" || echo "No changes"
+          git push origin production
