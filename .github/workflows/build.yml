@@ -17,29 +17,31 @@ jobs:
       - name: Checkout master
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # REQUIRED to switch branches
+          fetch-depth: 0
 
       - name: Install & build
         run: |
           npm ci
           npm run build
 
+      - name: Preserve build output
+        run: |
+          mkdir /tmp/dist
+          cp -r dist/* /tmp/dist/
+
       - name: Switch to production branch
         run: |
           git checkout production || git checkout -b production
+
       - name: Clean production branch
         run: |
           git rm -rf .
           git clean -fxd
 
-      - name: Copy build output
+      - name: Restore build output
         run: |
-          if [ -d "dist" ]; then
-            cp -r dist/* .
-          else
-            echo "ERROR: dist/ folder not found"
-            exit 1
-          fi
+          cp -r /tmp/dist/* .
+
       - name: Commit and push
         run: |
           git add .
