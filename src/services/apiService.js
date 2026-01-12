@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:3000/";
+const BASE_URL = "https://yume-api.bram-jesse.sd-lab.nl/";
 // const BASE_URL = "https://yume-api.heckerdev.net:3000/";
 const API_BASE_URL = BASE_URL + "api/v1";
 
