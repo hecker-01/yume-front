@@ -22,7 +22,23 @@ const fetchOrders = async () => {
 
     // Fetch user's orders
     const response = await apiService.getOrders();
-    orders.value = response.orders || response || [];
+    let fetchedOrders = response.orders || response || [];
+
+    // Sort orders: newer first, completed orders at the bottom
+    orders.value = fetchedOrders.sort((a, b) => {
+      // First, prioritize non-completed orders
+      const aCompleted = a.Status === "completed" || a.status === "completed";
+      const bCompleted = b.Status === "completed" || b.status === "completed";
+
+      if (aCompleted !== bCompleted) {
+        return aCompleted ? 1 : -1; // Completed orders go to the bottom
+      }
+
+      // Within each group, sort by date (newer first)
+      const aDate = new Date(a.Ordered_at || a.createdAt);
+      const bDate = new Date(b.Ordered_at || b.createdAt);
+      return bDate - aDate; // Descending order (newer first)
+    });
 
     // Update unpaid orders status in localStorage
     const hasUnpaid = orders.value.some(
