@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://localhost:3000/api/v1"
+      "url": "https://yume-api.bram-jesse.sd-lab.nl/api/v1"
     }
   ],
   "paths": {
