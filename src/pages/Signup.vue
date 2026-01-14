@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import apiService from "@/services/apiService.js";
+import authService from "@/services/authService.js";
 
 const router = useRouter();
 const formData = ref({
@@ -56,11 +57,19 @@ const handleSignup = async () => {
     localStorage.removeItem("hasUnpaidOrders");
     localStorage.removeItem("lastUnpaidOrderCheck");
 
-    // Redirect to login page after successful signup
-    router.push({
-      name: "Login",
-      query: { message: "Account created successfully! Please sign in." },
-    });
+    // Automatically log in the user after successful signup
+    try {
+      await authService.login(formData.value.email, formData.value.password);
+      // Redirect to home page after successful login
+      router.push({ name: "Home" });
+    } catch (loginError) {
+      console.error("Auto-login failed:", loginError);
+      // If auto-login fails, redirect to login page
+      router.push({
+        name: "Login",
+        query: { message: "Account created successfully! Please sign in." },
+      });
+    }
   } catch (err) {
     // Check for different error types
     if (err.message.includes("429") || err.message.includes("rate limit")) {
