@@ -36,6 +36,9 @@ import {
   faUniversity,
   faMobileAlt,
   faMoneyBillWave,
+  faShoppingBag,
+  faUtensils,
+  faTruck,
 } from "@fortawesome/free-solid-svg-icons";
 
 library.add(
@@ -67,7 +70,10 @@ library.add(
   faWallet,
   faUniversity,
   faMobileAlt,
-  faMoneyBillWave
+  faMoneyBillWave,
+  faShoppingBag,
+  faUtensils,
+  faTruck
 );
 
 const app = createApp(App);
