@@ -95,21 +95,23 @@ const isStepActive = (step) => {
     completed: ["completed"],
   };
 
-  // Get the index of the current status
-  const currentIndex = Math.max(
-    ...statusOrder.map((s, i) =>
-      currentStatus.includes(s) || currentStatus === s ? i : -1
-    )
+  // Get the minimum index of the current status
+  const currentIndex = Math.min(
+    ...statusOrder
+      .map((s, i) =>
+        currentStatus.includes(s) || currentStatus === s ? i : Infinity
+      )
+      .filter((i) => i !== Infinity)
   );
 
-  // Get the index of the step we're checking
+  // Get the minimum index of the step we're checking
   const stepStatuses = stepToStatus[step] || [];
-  const stepIndex = Math.max(
-    ...stepStatuses.map((s) => statusOrder.indexOf(s))
+  const stepIndex = Math.min(
+    ...stepStatuses.map((s) => statusOrder.indexOf(s)).filter((i) => i >= 0)
   );
 
   // Step is active if current status index is >= step index
-  return currentIndex >= stepIndex && stepIndex >= 0;
+  return !isNaN(currentIndex) && !isNaN(stepIndex) && currentIndex >= stepIndex;
 };
 
 // Helper to get display text for step timestamp
