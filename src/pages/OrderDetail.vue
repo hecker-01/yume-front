@@ -71,17 +71,28 @@ const fetchDishDetails = async (items) => {
   }
 };
 
-const fetchOrderDetails = async () => {
+const fetchOrderDetails = async (showLoading = true) => {
   try {
-    isLoading.value = true;
+    // Only show loading state on initial load
+    if (showLoading) {
+      isLoading.value = true;
+    }
     error.value = "";
 
     const response = await apiService.getOrderById(orderId);
-    order.value = response.order || response;
+    const newOrder = response.order || response;
 
-    // Fetch detailed information for each dish
-    if (order.value?.items && order.value.items.length > 0) {
-      await fetchDishDetails(order.value.items);
+    // Compare the new data with existing data
+    const hasChanged = JSON.stringify(order.value) !== JSON.stringify(newOrder);
+
+    // Only update if data has changed
+    if (hasChanged) {
+      order.value = newOrder;
+
+      // Fetch detailed information for each dish
+      if (order.value?.items && order.value.items.length > 0) {
+        await fetchDishDetails(order.value.items);
+      }
     }
   } catch (err) {
     console.error("Failed to fetch order details:", err);
@@ -111,7 +122,9 @@ const fetchOrderDetails = async () => {
       error.value = err.message || "Failed to load order details";
     }
   } finally {
-    isLoading.value = false;
+    if (showLoading) {
+      isLoading.value = false;
+    }
   }
 };
 
@@ -136,11 +149,12 @@ const handlePaymentComplete = async () => {
 };
 
 onMounted(() => {
-  fetchOrderDetails();
+  fetchOrderDetails(true);
 
   // Refresh order data every 10 seconds for real-time updates
   refreshInterval = setInterval(() => {
-    fetchOrderDetails();
+    // Silent refresh without loading state
+    fetchOrderDetails(false);
   }, 10000);
 });
 

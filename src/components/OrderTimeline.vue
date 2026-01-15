@@ -454,7 +454,7 @@ const formatDate = (dateString) => {
 /* Responsive Timeline for mobile */
 @media (max-width: 640px) {
   .timeline-container {
-    padding: 1.5rem 0.5rem;
+    padding: 0;
   }
 
   .progress-line-bg,
@@ -484,9 +484,9 @@ const formatDate = (dateString) => {
 }
 
 /* Extra small screens */
-@media (max-width: 480px) {
+@media (max-width: 360px) {
   .timeline-container {
-    padding: 1.25rem 0.25rem;
+    padding: 0;
   }
 
   .progress-line-bg,
