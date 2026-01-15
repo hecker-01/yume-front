@@ -1,12 +1,13 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import apiService from "@/services/apiService.js";
 import { BASE_URL } from "@/services/apiService";
 import { setCartItem, getCartItem } from "@/services/cartService";
 import Dish from "@/components/Dish.vue";
 
 const route = useRoute();
+const router = useRouter();
 const dish = ref(null);
 const allDishes = ref([]);
 const isLoading = ref(true);
@@ -88,6 +89,14 @@ onMounted(() => {
 <template>
   <div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-4xl mx-auto">
+      <!-- Back Button -->
+      <button
+        @click="router.push('/')"
+        class="mb-6 inline-flex items-center text-sm font-medium text-gray-600 hover:text-gray-900"
+      >
+        <font-awesome-icon icon="arrow-left" class="mr-2" />
+        Back to Menu
+      </button>
       <!-- Loading State -->
       <div v-if="isLoading" class="bg-white shadow rounded-lg p-8">
         <div class="animate-pulse space-y-6">
