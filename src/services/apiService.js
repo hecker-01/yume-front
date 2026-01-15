@@ -1,5 +1,13 @@
 const BASE_URL = "https://yume-api.bram-jesse.sd-lab.nl/";
-const API_BASE_URL = BASE_URL + "api/v1";
+const BASE_URL_LOCAL = "http://localhost:443/";
+
+// Detect if running locally
+const isLocalhost =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1" ||
+  window.location.hostname === "";
+
+const API_BASE_URL = (isLocalhost ? BASE_URL_LOCAL : BASE_URL) + "api/v1";
 
 class ApiService {
   constructor() {

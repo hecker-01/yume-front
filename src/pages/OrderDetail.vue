@@ -2,9 +2,12 @@
 import { ref, onMounted, onBeforeUnmount, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import apiService from "@/services/apiService.js";
-import { BASE_URL } from "@/services/apiService.js";
 import authService from "@/services/authService.js";
 import Payment from "@/components/Payment.vue";
+import OrderHeader from "@/components/OrderHeader.vue";
+import OrderTimeline from "@/components/OrderTimeline.vue";
+import OrderItemsList from "@/components/OrderItemsList.vue";
+import DeliveryInfo from "@/components/DeliveryInfo.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -37,12 +40,6 @@ const getItemPrice = (item) => {
 const getItemQuantity = (item) => {
   // Handle various quantity field names and default to 1
   return item.quantity || item.Quantity || item.aantal || 1;
-};
-
-const getItemSubtotal = (item) => {
-  const price = getItemPrice(item);
-  const quantity = getItemQuantity(item);
-  return price * quantity;
 };
 
 const fetchDishDetails = async (items) => {
@@ -118,43 +115,6 @@ const fetchOrderDetails = async () => {
   }
 };
 
-const getStatusColor = (status) => {
-  const statusMap = {
-    ordered: "bg-yellow-100 text-yellow-800 border-yellow-200",
-    pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
-    processing: "bg-blue-100 text-blue-800 border-blue-200",
-    preparing: "bg-blue-100 text-blue-800 border-blue-200",
-    delivering: "bg-purple-100 text-purple-800 border-purple-200",
-    completed: "bg-green-100 text-green-800 border-green-200",
-    cancelled: "bg-red-100 text-red-800 border-red-200",
-  };
-  return (
-    statusMap[status?.toLowerCase()] ||
-    "bg-gray-100 text-gray-800 border-gray-200"
-  );
-};
-
-const formatDate = (dateString) => {
-  if (!dateString) return "N/A";
-  return new Date(dateString).toLocaleString();
-};
-
-const getImageUrl = (item) => {
-  // Try item.image first, then dish details
-  const imagePath =
-    item.image || dishDetails.value.get(item.dishID || item.id)?.Image;
-
-  if (!imagePath) return null;
-
-  // If it's already a full URL (starts with http), use it as-is
-  if (imagePath.startsWith("http")) {
-    return imagePath;
-  }
-
-  // Otherwise, prepend BASE_URL
-  return BASE_URL + imagePath;
-};
-
 const openPaymentPopup = () => {
   showPaymentPopup.value = true;
 };
@@ -178,10 +138,10 @@ const handlePaymentComplete = async () => {
 onMounted(() => {
   fetchOrderDetails();
 
-  // Refresh order data every 20 seconds
+  // Refresh order data every 10 seconds for real-time updates
   refreshInterval = setInterval(() => {
     fetchOrderDetails();
-  }, 20000);
+  }, 10000);
 });
 
 onBeforeUnmount(() => {
@@ -265,186 +225,26 @@ onBeforeUnmount(() => {
       <!-- Order Details -->
       <div v-else-if="order" class="space-y-6">
         <!-- Order Header -->
-        <div class="bg-white shadow rounded-lg p-6">
-          <div class="flex justify-between items-start mb-4">
-            <div>
-              <h1 class="text-3xl font-bold text-gray-900">
-                Order #{{ order.OrderID || order.id }}
-              </h1>
-              <p class="text-sm text-gray-500 mt-1">
-                Placed on {{ formatDate(order.Ordered_at || order.createdAt) }}
-              </p>
-            </div>
-            <span
-              class="px-4 py-2 text-sm font-semibold rounded-lg border-2"
-              :class="getStatusColor(order.Status || order.status)"
-            >
-              {{ order.Status || order.status }}
-            </span>
-          </div>
+        <OrderHeader :order="order" />
 
-          <!-- Order Timeline -->
-          <div class="border-t pt-6 mt-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">
-              Order Status
-            </h2>
-            <div class="space-y-3">
-              <div class="flex items-center">
-                <div
-                  class="w-3 h-3 rounded-full"
-                  :class="order.Ordered_at ? 'bg-green-500' : 'bg-gray-300'"
-                ></div>
-                <div class="ml-3">
-                  <p class="text-sm font-medium text-gray-900">Ordered</p>
-                  <p class="text-xs text-gray-500">
-                    {{ formatDate(order.Ordered_at) }}
-                  </p>
-                </div>
-              </div>
-              <div class="flex items-center">
-                <div
-                  class="w-3 h-3 rounded-full"
-                  :class="order.processing_at ? 'bg-green-500' : 'bg-gray-300'"
-                ></div>
-                <div class="ml-3">
-                  <p class="text-sm font-medium text-gray-900">Processing</p>
-                  <p class="text-xs text-gray-500">
-                    {{ formatDate(order.processing_at) }}
-                  </p>
-                </div>
-              </div>
-              <div class="flex items-center">
-                <div
-                  class="w-3 h-3 rounded-full"
-                  :class="order.Delivering_at ? 'bg-green-500' : 'bg-gray-300'"
-                ></div>
-                <div class="ml-3">
-                  <p class="text-sm font-medium text-gray-900">Delivering</p>
-                  <p class="text-xs text-gray-500">
-                    {{ formatDate(order.Delivering_at) }}
-                  </p>
-                </div>
-              </div>
-              <div class="flex items-center">
-                <div
-                  class="w-3 h-3 rounded-full"
-                  :class="order.Completed_at ? 'bg-green-500' : 'bg-gray-300'"
-                ></div>
-                <div class="ml-3">
-                  <p class="text-sm font-medium text-gray-900">Completed</p>
-                  <p class="text-xs text-gray-500">
-                    {{ formatDate(order.Completed_at) }}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+        <!-- Order Timeline -->
+        <div class="bg-white shadow rounded-lg p-6">
+          <OrderTimeline :order="order" />
         </div>
 
         <!-- Order Items -->
-        <div class="bg-white shadow rounded-lg p-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Order Items</h2>
-          <div class="divide-y">
-            <div
-              v-for="item in order.items"
-              :key="item.dishID || item.id"
-              class="py-4"
-            >
-              <div class="flex justify-between items-start">
-                <div class="flex items-start space-x-4 flex-1">
-                  <img
-                    v-if="getImageUrl(item)"
-                    :src="getImageUrl(item)"
-                    :alt="item.name || item.dishName"
-                    class="w-20 h-20 object-cover rounded"
-                  />
-                  <div class="flex-1">
-                    <p class="font-medium text-gray-900 text-lg">
-                      {{
-                        item.name ||
-                        item.dishName ||
-                        dishDetails.get(item.dishID || item.id)?.Name ||
-                        `Dish #${item.dishID}`
-                      }}
-                    </p>
-                    <p class="text-gray-500 mt-1">
-                      Quantity: {{ getItemQuantity(item) }}
-                    </p>
-                    <p class="text-sm text-gray-600 mt-1">
-                      ${{ getItemPrice(item).toFixed(2) }} each
-                    </p>
-
-                    <!-- Display ingredients from detailed dish data -->
-                    <div
-                      v-if="
-                        dishDetails.get(item.dishID || item.id)?.Ingredients
-                      "
-                      class="mt-2"
-                    >
-                      <p class="text-xs font-semibold text-gray-700 uppercase">
-                        Ingredients:
-                      </p>
-                      <p class="text-sm text-gray-600 mt-1">
-                        {{
-                          dishDetails.get(item.dishID || item.id)?.Ingredients
-                        }}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div class="ml-4 text-right">
-                  <p class="font-semibold text-gray-900 text-lg">
-                    ${{ getItemSubtotal(item).toFixed(2) }}
-                  </p>
-                  <p class="text-xs text-gray-500 mt-1">
-                    {{ getItemQuantity(item) }} × ${{
-                      getItemPrice(item).toFixed(2)
-                    }}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Order Total -->
-          <div class="border-t pt-4 mt-4">
-            <div class="flex justify-between items-center text-lg font-bold">
-              <span>Total</span>
-              <span>${{ orderTotal.toFixed(2) }}</span>
-            </div>
-            <div class="flex justify-between items-center mt-2">
-              <span class="text-sm font-medium">Payment Status</span>
-              <span
-                class="text-sm font-semibold"
-                :class="order.Paid ? 'text-green-600' : 'text-red-600'"
-              >
-                {{ order.Paid ? "Paid" : "Unpaid" }}
-              </span>
-            </div>
-
-            <!-- Payment Button (shown when order is not paid) -->
-            <div v-if="!order.Paid" class="mt-4">
-              <button
-                @click="openPaymentPopup"
-                class="w-full px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
-              >
-                <font-awesome-icon icon="credit-card" class="mr-2" />
-                Pay Now
-              </button>
-            </div>
-          </div>
-        </div>
+        <OrderItemsList
+          :order="order"
+          :dishDetails="dishDetails"
+          :orderTotal="orderTotal"
+          @openPayment="openPaymentPopup"
+        />
 
         <!-- Delivery Information -->
-        <div
+        <DeliveryInfo
           v-if="order.delivery_address"
-          class="bg-white shadow rounded-lg p-6"
-        >
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">
-            Delivery Information
-          </h2>
-          <p class="text-gray-700">{{ order.delivery_address }}</p>
-        </div>
+          :deliveryAddress="order.delivery_address"
+        />
       </div>
 
       <!-- Payment Component -->
@@ -458,5 +258,3 @@ onBeforeUnmount(() => {
     </div>
   </div>
 </template>
-
-<style scoped></style>
